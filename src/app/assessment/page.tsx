@@ -95,7 +95,7 @@ export default function AssessmentPage() {
           </div>
 
           <p className="mx-auto mt-8 max-w-md rounded-lg bg-brand-50 px-4 py-3 text-sm text-brand-700">
-            Prototype note: the dashboard shows a sample skill profile for Alex. In the final
+            Prototype note: the dashboard shows a sample skill profile for Fahim. In the final
             system, your real answers would generate it.
           </p>
 

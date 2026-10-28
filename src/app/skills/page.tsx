@@ -138,7 +138,7 @@ export default function SkillsPage() {
               <p className="font-semibold text-ink">Current level: {student.level}</p>
             </div>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">
-              Alex writes working programs and understands core logic well. The next challenge
+              Fahim writes working programs and understands core logic well. The next challenge
               is organising larger programs (OOP), storing data efficiently (data structures)
               and working with databases — the core of backend development.
             </p>

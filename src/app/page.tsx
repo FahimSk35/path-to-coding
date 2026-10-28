@@ -299,10 +299,10 @@ export default function HomePage() {
           <div className="max-w-2xl">
             <p className="text-sm font-semibold text-brand-200">A sample learning journey</p>
             <h2 className="mt-2 text-3xl font-bold tracking-tight">
-              Meet Alex, a second-year CS student
+              Meet Fahim, a second-year CS student
             </h2>
             <p className="mt-4 text-slate-400">
-              Alex knew the basics but did not know what to learn next. Here is how Path To
+              Fahim knew the basics but did not know what to learn next. Here is how Path To
               Coding turns that uncertainty into a plan.
             </p>
           </div>

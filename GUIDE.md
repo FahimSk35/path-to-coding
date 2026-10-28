@@ -82,7 +82,7 @@ Go to **http://localhost:3000**. The first page load may take a few seconds beca
 | Landing page | http://localhost:3000 | Product website: hero, 4 steps, features, sample journey, call to action |
 | How It Works | http://localhost:3000/how-it-works | The 5-step user journey and prototype scope |
 | Assessment | http://localhost:3000/assessment | 10-question interactive quiz with progress panel and results screen |
-| Dashboard | http://localhost:3000/dashboard | "Welcome back, Alex", stats, skills, skill gaps, recommendation, chart |
+| Dashboard | http://localhost:3000/dashboard | "Welcome back, Fahim", stats, skills, skill gaps, recommendation, chart |
 | My Skills | http://localhost:3000/skills | Radar chart, strongest/weakest skills, skill categories |
 | Career Goal | http://localhost:3000/career | 5 career cards, Backend Developer selected |
 | Learning Roadmap | http://localhost:3000/roadmap | 7-stage vertical timeline with progress ring |
@@ -94,7 +94,7 @@ Go to **http://localhost:3000**. The first page load may take a few seconds beca
 
 **Working:** all navigation; answering assessment questions, Previous/Next, jumping to a question number, the results screen and Retake; selecting a career card; searching and filtering resources (including the "No resources found" empty state); the mobile menus; hover effects.
 
-**Demonstrational (clearly labelled):** "Start Learning" on the roadmap and "Explore Resource" on resource cards show a small message saying the feature comes in a later phase. All scores are sample data for the fictional student Alex. The top bar shows a "Prototype · sample data" label so nobody mistakes it for a finished product.
+**Demonstrational (clearly labelled):** "Start Learning" on the roadmap and "Explore Resource" on resource cards show a small message saying the feature comes in a later phase. All scores are sample data for the fictional student Fahim. The top bar shows a "Prototype · sample data" label so nobody mistakes it for a finished product.
 
 ---
 
@@ -131,7 +131,7 @@ path-to-coding/
     │   ├── ProgressBar.tsx        ← horizontal skill bars
     │   └── DemoButton.tsx         ← button that shows "Demo only" message
     └── data/
-        └── mockData.ts            ← ALL sample data (Alex, scores, questions…)
+        └── mockData.ts            ← ALL sample data (Fahim, scores, questions…)
 ```
 
 Folders created automatically (do not edit or upload them): `node_modules/` (downloaded packages) and `.next/` (Next.js build cache).
@@ -183,7 +183,7 @@ The full code is in each file — open it in VS Code next to this guide. Files a
 
 - The `export type ...` blocks describe the **shape** of the data. For example `type Skill = { name: string; score: number; ... }` means every skill must have a text `name` and a number `score`. If you misspell a field, VS Code underlines it in red.
 - `type Priority = "High" | "Medium" | "Low"` means a priority can **only** be one of those three words.
-- `export const student = { ... }` is an **object** (a group of named values) for Alex.
+- `export const student = { ... }` is an **object** (a group of named values) for Fahim.
 - `export const skills: Skill[] = [ ... ]` is an **array** (a list) of skill objects. `Skill[]` means "a list of Skill".
 - `questions` holds the 10 assessment questions. `answer` is the **index** of the correct option — indexes start at 0, so `answer: 1` means the **second** option.
 - `export` makes each value available to other files, which bring it in with `import { skills } from "@/data/mockData"`.
@@ -231,7 +231,7 @@ The full code is in each file — open it in VS Code next to this guide. Files a
 - `appLinks.map((link) => ( ... ))` loops over the array and produces one `<Link>` per item. React needs a unique `key` on each repeated item, so we use `key={link.href}`.
 - `const Icon = link.icon;` then `<Icon />`: icons are components, and React component names must start with a capital letter, so we store it in a capitalised variable first.
 - `menuOpen` state controls the mobile slide-out menu. `hidden lg:block` means "hidden on small screens, visible from large screens up" — this is how the layout becomes responsive.
-- The top bar shows a search box (visual only), the "Prototype · sample data" label, a notification bell and Alex's initials.
+- The top bar shows a search box (visual only), the "Prototype · sample data" label, a notification bell and Fahim's initials.
 - `{children}` inside `<main>` is where each page's content appears.
 
 ### 3.11 `src/components/SiteHeader.tsx` and `SiteFooter.tsx`
@@ -245,7 +245,7 @@ The full code is in each file — open it in VS Code next to this guide. Files a
 
 **Purpose:** the product website and first impression.
 
-- **Data at the top:** `steps` (the 4 how-it-works cards), `features` (6 feature items) and `journey` (Alex's 4 milestones). Edit text there, not inside the HTML.
+- **Data at the top:** `steps` (the 4 how-it-works cards), `features` (6 feature items) and `journey` (Fahim's 4 milestones). Edit text there, not inside the HTML.
 - **`HeroPreview` component:** the "app window" illustration on the right of the hero. It is built from real HTML and the real `skills` data — not an image — so it stays sharp and matches the app. It shows a fake browser bar, skill bars, a mini roadmap and a floating "Recommended next step" card.
 - **`HomePage` component** (the `export default`) puts the sections in order: `SiteHeader` → hero (headline, supporting text, **Get Started** → `/assessment`, **Explore How It Works** → `/how-it-works`) → 4 steps → features → dark "sample learning journey" section → call-to-action box → `SiteFooter`.
 - `lg:grid-cols-2` makes the hero two columns on large screens and one column on phones.
@@ -273,7 +273,7 @@ Logic:
 - `answeredCount` and `progress` are calculated from `answers` every time the page re-draws.
 - The **Next** button has `disabled={answers[current] === null}` so students must pick an answer first.
 - The right panel shows a grid of question numbers (click to jump), colour-coded current/answered/not-yet, plus a list of topics with the current topic highlighted.
-- When `finished` is true, the component returns the **results screen** instead (score, answered count, link to the dashboard, Retake). It clearly notes that the dashboard shows Alex's sample profile.
+- When `finished` is true, the component returns the **results screen** instead (score, answered count, link to the dashboard, Retake). It clearly notes that the dashboard shows Fahim's sample profile.
 
 **To edit questions:** change the `questions` array in `mockData.ts`. Add a `code: "..."` field to show a code box; `\n` inside the text means a new line.
 
@@ -282,7 +282,7 @@ Logic:
 **Purpose:** the main "home" of the app for a logged-in student.
 
 Sections, top to bottom:
-1. **Welcome header** — "Welcome back, Alex", progress summary sentence, **Continue Learning** button.
+1. **Welcome header** — "Welcome back, Fahim", progress summary sentence, **Continue Learning** button.
 2. **Four stat cards** from the `stats` array (overall score, topics completed, study time, streak).
 3. **Recommended Next Step** (dark card) — the required recommendation text and the **View Learning Roadmap** button.
 4. **Current skill levels** — the five required scores as colour-coded progress bars, with a colour legend.
@@ -340,7 +340,7 @@ This file has no `"use client"`, because nothing on it needs clicking-state — 
 - **State (`useState`)** — memory for a component that changes over time (selected answer, open menu). Changing it with the setter function makes React re-draw the screen.
 - **Event handler** — a function that runs when something happens, connected with props like `onClick` or `onChange`.
 - **Arrays & `.map()`** — an array is a list `[a, b, c]`. `.map()` turns each item into some JSX, which is how we draw cards and lists from data. `.filter()` keeps matching items; `.find()` returns the first match.
-- **Objects** — groups of named values: `{ name: "Alex", score: 78 }`. Read with a dot: `student.name`.
+- **Objects** — groups of named values: `{ name: "Fahim", score: 78 }`. Read with a dot: `student.name`.
 - **TypeScript types** — labels that describe data (`string` = text, `number`, `boolean` = true/false, `string[]` = list of text). Mistakes are underlined in VS Code before you even run the site.
 - **Conditional rendering** — `{condition && <Thing />}` shows Thing only if condition is true; `{condition ? <A /> : <B />}` picks one of two.
 - **Next.js routes** — a folder inside `src/app` with a `page.tsx` file becomes a web address. `src/app/roadmap/page.tsx` → `/roadmap`. No router setup needed.
@@ -415,12 +415,12 @@ Visit http://localhost:3000/settings.
 
 ### 7.2 Suggested 5-minute demo script
 
-1. **Landing page** (`/`): "Path To Coding helps students assess skills, find gaps, choose a career and follow a roadmap." Scroll through the 4 steps, features and Alex's journey.
+1. **Landing page** (`/`): "Path To Coding helps students assess skills, find gaps, choose a career and follow a roadmap." Scroll through the 4 steps, features and Fahim's journey.
 2. Click **Get Started** → **Assessment**: answer two or three questions, show the progress bar and question grid, click a number to jump, finish to show the results screen.
 3. **View My Dashboard**: point out the skill scores, skill gaps with priorities, and the Recommended Next Step.
 4. **Career Goal**: show Backend Developer selected, click another card to show selection, click back, then **Continue**.
 5. **Roadmap**: walk down the timeline — completed, recommended next (click **Start Learning** to show the demo message), upcoming, final goal. Point to the progress ring.
-6. **My Skills**: radar chart comparing Alex with the Backend target.
+6. **My Skills**: radar chart comparing Fahim with the Backend target.
 7. **Resources**: type "SQL" in search, click a category filter, show the empty state by typing nonsense.
 8. Close with **How It Works**: what is in this prototype vs planned for later phases.
 
