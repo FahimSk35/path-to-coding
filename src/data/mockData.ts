@@ -74,8 +74,8 @@ export type Resource = {
 
 export const student = {
   name: "Fahim",
-  fullName: "Alex Morgan",
-  initials: "AM",
+  fullName: "Sheikh Fahim",
+  initials: "SF",
   program: "BSc in Computer Science, Year 2",
   careerGoal: "Backend Developer",
   overallScore: 54,
