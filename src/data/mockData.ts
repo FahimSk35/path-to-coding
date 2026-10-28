@@ -73,7 +73,7 @@ export type Resource = {
 // ---------- The fictional student ----------
 
 export const student = {
-  name: "Alex",
+  name: "Fahim",
   fullName: "Alex Morgan",
   initials: "AM",
   program: "BSc in Computer Science, Year 2",
