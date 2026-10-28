@@ -1,0 +1,48 @@
+/* Load Tailwind CSS. This one line gives us every utility class (bg-white, p-4, ...). */
+@import "tailwindcss";
+
+/* Our design tokens: the font and brand colours used across the whole site. */
+@theme {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+
+  /* "brand" colours. Use them as bg-brand-600, text-brand-700, etc. */
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+  --color-ink: #0f172a;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #f8fafc;
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* A soft dotted background used behind the landing-page hero. */
+.dot-grid {
+  background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Small fade-in animation for toasts and page content. */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.35s ease-out both;
+}
