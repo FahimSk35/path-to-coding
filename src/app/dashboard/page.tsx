@@ -36,19 +36,29 @@ const quickLinks = [
 export default function DashboardPage() {
   // Tallest bar in the activity chart, so other bars can be sized relative to it.
   const maxHours = Math.max(...weeklyActivity.map((d) => d.hours));
+  const completedStages = roadmap.filter((stage) => stage.status === "Completed").length;
+  const roadmapProgress = Math.round((completedStages / roadmap.length) * 100);
+  const nextStage = roadmap.find((stage) => stage.status === "Recommended Next");
+  const nextSkillScore = skills.find((skill) => skill.name === nextStage?.title)?.score;
+  const today = new Intl.DateTimeFormat("en", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(new Date());
 
   return (
     <AppShell>
       {/* Welcome header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm text-slate-500">Wednesday, 21 October</p>
+          <p className="text-sm text-slate-500">{today}</p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink sm:text-3xl">
             Welcome back, {student.name}
           </h1>
           <p className="mt-2 text-slate-500">
-            You are <span className="font-semibold text-ink">14% of the way</span> to becoming a{" "}
-            {student.careerGoal}. One stage done, six to go.
+            You are <span className="font-semibold text-ink">{roadmapProgress}% of the way</span> to becoming a{" "}
+            {student.careerGoal}. {completedStages} {completedStages === 1 ? "stage" : "stages"} done,{" "}
+            {roadmap.length - completedStages} to go.
           </p>
         </div>
         <Link
@@ -88,12 +98,14 @@ export default function DashboardPage() {
                 <Sparkles className="h-3.5 w-3.5" /> Recommended Next Step
               </span>
               <h2 className="mt-4 max-w-xl text-xl font-semibold leading-snug sm:text-2xl">
-                Strengthen your Object-Oriented Programming fundamentals before moving to
-                advanced backend concepts.
+                {nextStage
+                  ? `Strengthen your ${nextStage.title} fundamentals before moving to advanced backend concepts.`
+                  : "Keep building your backend development skills."}
               </h2>
               <p className="mt-3 max-w-xl text-sm text-slate-300">
-                Your OOP score is 52%. Backend frameworks rely heavily on classes and objects,
-                so this unlocks the rest of your roadmap.
+                {nextSkillScore !== undefined
+                  ? `Your current score is ${nextSkillScore}%. Backend frameworks rely on these fundamentals, so strengthening them unlocks the rest of your roadmap.`
+                  : "Strengthening your current focus will help unlock the rest of your roadmap."}
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
@@ -145,7 +157,12 @@ export default function DashboardPage() {
           {/* Roadmap preview */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold text-ink">Learning roadmap preview</h2>
+              <div>
+                <h2 className="font-semibold text-ink">Learning roadmap preview</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  {completedStages} of {roadmap.length} stages complete · {roadmapProgress}% overall
+                </p>
+              </div>
               <Link href="/roadmap" className="text-sm font-semibold text-brand-600 hover:text-brand-700">
                 Full roadmap
               </Link>
@@ -187,9 +204,9 @@ export default function DashboardPage() {
             <div className="mt-5">
               <div className="mb-2 flex justify-between text-sm">
                 <span className="text-slate-500">Readiness</span>
-                <span className="font-semibold text-ink">48%</span>
+                <span className="font-semibold text-ink">{student.overallScore}%</span>
               </div>
-              <ProgressBar value={48} color="bg-brand-600" />
+              <ProgressBar value={student.overallScore} color="bg-brand-600" />
             </div>
             <Link
               href="/career"
@@ -237,7 +254,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <h2 className="font-semibold text-ink">This week</h2>
               <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
-                <TrendingUp className="h-3.5 w-3.5" /> 7.5 h studied
+                <TrendingUp className="h-3.5 w-3.5" /> {student.hoursThisWeek} h studied
               </span>
             </div>
             <div className="mt-6 flex h-32 items-end justify-between gap-2">

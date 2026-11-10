@@ -17,7 +17,7 @@ import {
   X,
 } from "lucide-react";
 import Logo from "./Logo";
-import { student } from "@/data/mockData";
+import { roadmap, student } from "@/data/mockData";
 
 // The links shown in the app sidebar. Each one is an object with
 // a label, the page address (href) and an icon component.
@@ -39,6 +39,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   // On phones the sidebar is hidden; this state opens/closes it.
   const [menuOpen, setMenuOpen] = useState(false);
+  const completedStages = roadmap.filter((stage) => stage.status === "Completed").length;
+  const roadmapProgress = Math.round((completedStages / roadmap.length) * 100);
 
   // The sidebar content is stored in a variable so we can reuse it
   // for both the desktop sidebar and the mobile slide-out menu.
@@ -93,9 +95,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
         <p className="text-xs font-medium text-slate-500">Career goal</p>
         <p className="mt-0.5 text-sm font-bold text-ink">{student.careerGoal}</p>
         <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200">
-          <div className="h-full w-[14%] rounded-full bg-brand-600" />
+          <div className="h-full rounded-full bg-brand-600" style={{ width: `${roadmapProgress}%` }} />
         </div>
-        <p className="mt-1.5 text-xs text-slate-500">1 of 7 stages completed</p>
+        <p className="mt-1.5 text-xs text-slate-500">
+          {completedStages} of {roadmap.length} stages completed
+        </p>
       </div>
     </div>
   );

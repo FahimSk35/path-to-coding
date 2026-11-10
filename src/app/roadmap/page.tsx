@@ -11,7 +11,7 @@ import {
 import AppShell from "@/components/AppShell";
 import Badge, { difficultyTone, statusTone } from "@/components/Badge";
 import DemoButton from "@/components/DemoButton";
-import { roadmap, student, type RoadmapStage } from "@/data/mockData";
+import { roadmap, skills, student, type RoadmapStage } from "@/data/mockData";
 
 // The round marker on the timeline. Its look depends on the stage status.
 function StageMarker({ stage }: { stage: RoadmapStage }) {
@@ -47,6 +47,22 @@ function StageMarker({ stage }: { stage: RoadmapStage }) {
 export default function RoadmapPage() {
   const completed = roadmap.filter((s) => s.status === "Completed").length;
   const percent = Math.round((completed / roadmap.length) * 100);
+  const focusStages = roadmap.filter((stage) => stage.status === "Recommended Next").length;
+  const totalWeeks = roadmap.reduce(
+    (total, stage) => total + Number(stage.duration.match(/\d+/)?.[0] ?? 0),
+    0,
+  );
+  const remainingWeeks = roadmap
+    .filter((stage) => stage.status !== "Completed")
+    .reduce((total, stage) => total + Number(stage.duration.match(/\d+/)?.[0] ?? 0), 0);
+  const estimatedFinishDate = new Date();
+  estimatedFinishDate.setDate(estimatedFinishDate.getDate() + remainingWeeks * 7);
+  const estimatedFinish = new Intl.DateTimeFormat("en", {
+    month: "long",
+    year: "numeric",
+  }).format(estimatedFinishDate);
+  const fundamentalsScore = skills.find((skill) => skill.name === roadmap[0]?.title)?.score;
+  const nextSkillScore = skills.find((skill) => skill.name === roadmap[1]?.title)?.score;
 
   return (
     <AppShell>
@@ -187,10 +203,10 @@ export default function RoadmapPage() {
                   <span className="font-semibold text-ink">{completed}</span> of {roadmap.length} stages complete
                 </p>
                 <p className="text-slate-500">
-                  <span className="font-semibold text-ink">~24 weeks</span> total
+                  <span className="font-semibold text-ink">~{totalWeeks} weeks</span> total
                 </p>
                 <p className="text-slate-500">
-                  <span className="font-semibold text-ink">~21 weeks</span> remaining
+                  <span className="font-semibold text-ink">~{remainingWeeks} weeks</span> remaining
                 </p>
               </div>
             </div>
@@ -202,7 +218,7 @@ export default function RoadmapPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">In focus</span>
-                <span className="font-semibold text-brand-600">1</span>
+                <span className="font-semibold text-brand-600">{focusStages}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Upcoming</span>
@@ -212,7 +228,7 @@ export default function RoadmapPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Estimated finish</span>
-                <span className="font-semibold text-slate-700">April 2027</span>
+                <span className="font-semibold text-slate-700">{estimatedFinish}</span>
               </div>
             </div>
           </div>
@@ -220,9 +236,9 @@ export default function RoadmapPage() {
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="font-semibold text-ink">Why this order?</h3>
             <p className="mt-2 text-sm leading-relaxed text-slate-500">
-              Your fundamentals are strong (78%), so they are marked complete. OOP (52%) is the
-              biggest building block for backend work, so it comes next. Data structures and SQL
-              follow because they are your largest gaps.
+              {fundamentalsScore !== undefined && nextSkillScore !== undefined
+                ? `Your ${roadmap[0].title} fundamentals are strong (${fundamentalsScore}%), so they are marked complete. ${roadmap[1].title} (${nextSkillScore}%) is a key building block for backend work, so it comes next. Later stages build on those foundations.`
+                : "Each stage builds on the skills you need for your career goal, starting with your most important learning gaps."}
             </p>
           </div>
 
