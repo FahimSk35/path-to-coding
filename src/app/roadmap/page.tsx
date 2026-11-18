@@ -1,28 +1,35 @@
+
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowRight,
-  CircleCheck,
-  Clock,
-  Lock,
-  Server,
-  Sparkles,
-  Trophy,
+  ArrowRight, CircleCheck, Clock, Lock, Server, Sparkles, Trophy
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import Badge, { difficultyTone, statusTone } from "@/components/Badge";
-import DemoButton from "@/components/DemoButton";
 import { roadmap, skills, student, type RoadmapStage } from "@/data/mockData";
 
-// The round marker on the timeline. Its look depends on the stage status.
-function StageMarker({ stage }: { stage: RoadmapStage }) {
-  if (stage.status === "Completed") {
+const STORAGE_KEY = "path-to-coding-completed-stages";
+
+type StageStatus = RoadmapStage["status"];
+
+function StageMarker({
+  stage,
+  status,
+}: {
+  stage: RoadmapStage;
+  status: StageStatus;
+}) {
+  if (status === "Completed") {
     return (
       <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-white ring-4 ring-slate-50">
         <CircleCheck className="h-5 w-5" />
       </span>
     );
   }
-  if (stage.status === "Recommended Next") {
+
+  if (status === "Recommended Next") {
     return (
       <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white ring-4 ring-brand-100">
         <span className="absolute inset-0 animate-ping rounded-full bg-brand-400 opacity-30" />
@@ -30,13 +37,15 @@ function StageMarker({ stage }: { stage: RoadmapStage }) {
       </span>
     );
   }
-  if (stage.status === "Final Goal") {
+
+  if (status === "Final Goal") {
     return (
       <span className="flex h-10 w-10 items-center justify-center rounded-full bg-ink text-white ring-4 ring-slate-50">
         <Trophy className="h-5 w-5" />
       </span>
     );
   }
+
   return (
     <span className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-slate-200 bg-white text-sm font-bold text-slate-400 ring-4 ring-slate-50">
       {stage.id}
@@ -45,61 +54,164 @@ function StageMarker({ stage }: { stage: RoadmapStage }) {
 }
 
 export default function RoadmapPage() {
-  const completed = roadmap.filter((s) => s.status === "Completed").length;
-  const percent = Math.round((completed / roadmap.length) * 100);
-  const focusStages = roadmap.filter((stage) => stage.status === "Recommended Next").length;
-  const totalWeeks = roadmap.reduce(
-    (total, stage) => total + Number(stage.duration.match(/\d+/)?.[0] ?? 0),
-    0,
+  const initialCompleted = roadmap
+    .filter((stage) => stage.status === "Completed")
+    .map((stage) => stage.id);
+
+  const [completedIds, setCompletedIds] = useState<number[]>(initialCompleted);
+
+  useEffect(() => {
+    const validIds = new Set(roadmap.map((stage) => stage.id));
+
+    const loadProgress = () => {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+
+        if (saved) {
+          const parsed: unknown = JSON.parse(saved);
+
+          if (Array.isArray(parsed)) {
+            setCompletedIds([
+              ...new Set([
+                ...initialCompleted,
+                ...parsed.filter(
+                  (id): id is number =>
+                    typeof id === "number" && validIds.has(id)
+                ),
+              ]),
+            ]);
+          }
+        } else {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(initialCompleted));
+        }
+      } catch {
+        console.error("Could not load learning progress.");
+      }
+    };
+
+    loadProgress();
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEY) loadProgress();
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
+  const nextStage = roadmap.find(
+    (stage) =>
+      !completedIds.includes(stage.id) && stage.status !== "Final Goal"
   );
+
+  const getStatus = (stage: RoadmapStage): StageStatus => {
+    if (completedIds.includes(stage.id)) return "Completed";
+    if (stage.status === "Final Goal") return "Final Goal";
+    if (stage.id === nextStage?.id) return "Recommended Next";
+    return "Upcoming";
+  };
+
+  const completeStage = (id: number) => {
+    const updated = [...new Set([...completedIds, id])];
+    setCompletedIds(updated);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    } catch {
+      console.error("Could not save learning progress.");
+    }
+  };
+
+  const completed = roadmap.filter((stage) =>
+    completedIds.includes(stage.id)
+  ).length;
+
+  const percent = roadmap.length
+    ? Math.round((completed / roadmap.length) * 100)
+    : 0;
+
+  const totalWeeks = roadmap.reduce(
+    (total, stage) =>
+      total + Number(stage.duration.match(/\d+/)?.[0] ?? 0),
+    0
+  );
+
   const remainingWeeks = roadmap
-    .filter((stage) => stage.status !== "Completed")
-    .reduce((total, stage) => total + Number(stage.duration.match(/\d+/)?.[0] ?? 0), 0);
-  const estimatedFinishDate = new Date();
-  estimatedFinishDate.setDate(estimatedFinishDate.getDate() + remainingWeeks * 7);
+    .filter((stage) => !completedIds.includes(stage.id))
+    .reduce(
+      (total, stage) =>
+        total + Number(stage.duration.match(/\d+/)?.[0] ?? 0),
+      0
+    );
+
+  const finishDate = new Date();
+  finishDate.setDate(finishDate.getDate() + remainingWeeks * 7);
+
   const estimatedFinish = new Intl.DateTimeFormat("en", {
     month: "long",
     year: "numeric",
-  }).format(estimatedFinishDate);
-  const fundamentalsScore = skills.find((skill) => skill.name === roadmap[0]?.title)?.score;
-  const nextSkillScore = skills.find((skill) => skill.name === roadmap[1]?.title)?.score;
+  }).format(finishDate);
+
+  const focusStages = roadmap.filter(
+    (stage) => getStatus(stage) === "Recommended Next"
+  ).length;
+
+  const fundamentalsScore = skills.find(
+    (skill) => skill.name === roadmap[0]?.title
+  )?.score;
 
   return (
     <AppShell>
-      {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-6">
         <div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700 ring-1 ring-inset ring-brand-200">
-            <Server className="h-3.5 w-3.5" /> Career goal: {student.careerGoal}
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700 ring-1 ring-brand-200">
+            <Server className="h-4 w-4" />
+            Career goal: {student.careerGoal}
           </span>
           <h1 className="mt-3 text-2xl font-bold tracking-tight text-ink sm:text-3xl">
             Your Personalized Learning Path
           </h1>
           <p className="mt-2 max-w-2xl text-slate-500">
-            Your next steps, organized around your current skills and career goal.
+            Follow your learning stages, complete each step and track your progress.
           </p>
         </div>
         <Link
           href="/career"
-          className="rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50"
+          className="rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
         >
           Change career goal
         </Link>
       </div>
 
+      <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-semibold text-ink">Your learning progress</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              {completed} of {roadmap.length} stages completed
+            </p>
+          </div>
+          <p className="text-2xl font-bold text-brand-600">{percent}%</p>
+        </div>
+        <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-100">
+          <div
+            className="h-full rounded-full bg-brand-600 transition-all duration-500"
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+      </div>
+
       <div className="mt-8 grid gap-8 lg:grid-cols-3">
-        {/* TIMELINE */}
         <div className="lg:col-span-2">
           <ol className="relative">
             {roadmap.map((stage, index) => {
-              const isNext = stage.status === "Recommended Next";
-              const isLastStage = index === roadmap.length - 1;
-              const isDone = stage.status === "Completed";
+              const status = getStatus(stage);
+              const isNext = status === "Recommended Next";
+              const isLast = index === roadmap.length - 1;
+              const isDone = status === "Completed";
 
               return (
                 <li key={stage.id} className="relative flex gap-5 pb-6">
-                  {/* Vertical connecting line (not drawn after the last stage) */}
-                  {!isLastStage && (
+                  {!isLast && (
                     <span
                       className={`absolute left-5 top-10 -ml-px h-[calc(100%-2.5rem)] w-0.5 ${
                         isDone ? "bg-emerald-400" : "bg-slate-200"
@@ -108,62 +220,84 @@ export default function RoadmapPage() {
                   )}
 
                   <div className="relative z-10 shrink-0">
-                    <StageMarker stage={stage} />
+                    <StageMarker stage={stage} status={status} />
                   </div>
 
-                  {/* Stage card */}
                   <div
                     className={`flex-1 rounded-2xl border bg-white p-5 transition sm:p-6 ${
                       isNext
                         ? "border-brand-600 shadow-lg shadow-brand-600/10 ring-1 ring-brand-600"
-                        : "border-slate-200 shadow-sm hover:shadow-md"
-                    } ${stage.status === "Upcoming" ? "opacity-90" : ""}`}
+                        : "border-slate-200 shadow-sm"
+                    } ${status === "Upcoming" ? "opacity-90" : ""}`}
                   >
                     {isNext && (
                       <p className="mb-3 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-600">
-                        <Sparkles className="h-3.5 w-3.5" /> Start here
+                        <Sparkles className="h-4 w-4" /> Recommended next step
                       </p>
                     )}
+
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <p className="text-xs font-semibold text-slate-400">Stage {stage.id}</p>
-                        <h2 className="mt-0.5 text-lg font-semibold text-ink">{stage.title}</h2>
+                        <p className="text-xs font-semibold text-slate-400">
+                          Stage {stage.id}
+                        </p>
+                        <h2 className="mt-1 text-lg font-semibold text-ink">
+                          {stage.title}
+                        </h2>
                       </div>
-                      <Badge tone={statusTone(stage.status)}>{stage.status}</Badge>
+                      <Badge tone={statusTone(status)}>{status}</Badge>
                     </div>
 
-                    <p className="mt-2 text-sm leading-relaxed text-slate-500">{stage.description}</p>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-500">
+                      {stage.description}
+                    </p>
 
                     <div className="mt-4 flex flex-wrap items-center gap-2">
-                      <Badge tone={difficultyTone(stage.difficulty)}>{stage.difficulty}</Badge>
-                      <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500">
-                        <Clock className="h-3.5 w-3.5" /> {stage.duration}
+                      <Badge tone={difficultyTone(stage.difficulty)}>
+                        {stage.difficulty}
+                      </Badge>
+                      <span className="flex items-center gap-1 text-xs text-slate-500">
+                        <Clock className="h-4 w-4" />
+                        {stage.duration}
                       </span>
-                      <span className="text-slate-300">·</span>
                       {stage.topics.map((topic) => (
-                        <span key={topic} className="rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                        <span
+                          key={topic}
+                          className="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600"
+                        >
                           {topic}
                         </span>
                       ))}
                     </div>
 
-                    {/* Actions only for the recommended stage */}
                     {isNext && (
                       <div className="mt-5 flex flex-wrap gap-3 border-t border-slate-100 pt-5">
-                        <DemoButton variant="primary" message="Demo only — lessons will be added in a later phase.">
-                          Start Learning <ArrowRight className="h-4 w-4" />
-                        </DemoButton>
+                        <button
+                          onClick={() => completeStage(stage.id)}
+                          className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
+                        >
+                          Mark as completed <CircleCheck className="h-4 w-4" />
+                        </button>
                         <Link
                           href="/resources"
-                          className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
+                          className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
                         >
-                          View resources
+                          View resources <ArrowRight className="h-4 w-4" />
                         </Link>
                       </div>
                     )}
-                    {stage.status === "Upcoming" && (
-                      <p className="mt-4 flex items-center gap-1.5 text-xs text-slate-400">
-                        <Lock className="h-3.5 w-3.5" /> Unlocks after the previous stage
+
+                    {isDone && (
+                      <p className="mt-4 flex items-center gap-2 text-sm font-medium text-emerald-600">
+                        <CircleCheck className="h-4 w-4" />
+                        Successfully completed
+                      </p>
+                    )}
+
+                    {status === "Upcoming" && (
+                      <p className="mt-4 flex items-center gap-2 text-xs text-slate-400">
+                        <Lock className="h-4 w-4" />
+                        Complete the previous stage to continue
                       </p>
                     )}
                   </div>
@@ -173,12 +307,10 @@ export default function RoadmapPage() {
           </ol>
         </div>
 
-        {/* SIDE PANEL */}
         <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="font-semibold text-ink">Progress summary</h3>
 
-            {/* Circular progress ring drawn with SVG */}
             <div className="mt-6 flex items-center gap-5">
               <div className="relative h-24 w-24">
                 <svg viewBox="0 0 36 36" className="h-24 w-24 -rotate-90">
@@ -200,35 +332,29 @@ export default function RoadmapPage() {
               </div>
               <div className="space-y-1 text-sm">
                 <p className="text-slate-500">
-                  <span className="font-semibold text-ink">{completed}</span> of {roadmap.length} stages complete
+                  <strong className="text-ink">{completed}</strong> completed
                 </p>
-                <p className="text-slate-500">
-                  <span className="font-semibold text-ink">~{totalWeeks} weeks</span> total
-                </p>
-                <p className="text-slate-500">
-                  <span className="font-semibold text-ink">~{remainingWeeks} weeks</span> remaining
-                </p>
+                <p className="text-slate-500">~{totalWeeks} weeks total</p>
+                <p className="text-slate-500">~{remainingWeeks} weeks left</p>
               </div>
             </div>
 
             <div className="mt-6 space-y-3 border-t border-slate-100 pt-5 text-sm">
               <div className="flex justify-between">
                 <span className="text-slate-500">Completed</span>
-                <span className="font-semibold text-emerald-600">{completed}</span>
+                <strong className="text-emerald-600">{completed}</strong>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">In focus</span>
-                <span className="font-semibold text-brand-600">{focusStages}</span>
+                <strong className="text-brand-600">{focusStages}</strong>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Upcoming</span>
-                <span className="font-semibold text-slate-700">
-                  {roadmap.filter((s) => s.status === "Upcoming").length}
-                </span>
+                <strong>{roadmap.filter((stage) => getStatus(stage) === "Upcoming").length}</strong>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Estimated finish</span>
-                <span className="font-semibold text-slate-700">{estimatedFinish}</span>
+                <strong>{estimatedFinish}</strong>
               </div>
             </div>
           </div>
@@ -236,17 +362,17 @@ export default function RoadmapPage() {
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="font-semibold text-ink">Why this order?</h3>
             <p className="mt-2 text-sm leading-relaxed text-slate-500">
-              {fundamentalsScore !== undefined && nextSkillScore !== undefined
-                ? `Your ${roadmap[0].title} fundamentals are strong (${fundamentalsScore}%), so they are marked complete. ${roadmap[1].title} (${nextSkillScore}%) is a key building block for backend work, so it comes next. Later stages build on those foundations.`
-                : "Each stage builds on the skills you need for your career goal, starting with your most important learning gaps."}
+              {fundamentalsScore !== undefined
+                ? `Your ${roadmap[0]?.title} score is ${fundamentalsScore}%. Follow the recommended learning order and complete each stage to build your career skills.`
+                : "Each stage builds on the skills needed for your career goal."}
             </p>
           </div>
 
           <div className="rounded-2xl bg-ink p-6 text-white">
             <Trophy className="h-6 w-6 text-brand-200" />
-            <h3 className="mt-3 font-semibold">Final goal</h3>
-            <p className="mt-1.5 text-sm text-slate-300">
-              A portfolio-ready backend project that shows employers what you can build.
+            <h3 className="mt-3 font-semibold">Your final goal</h3>
+            <p className="mt-2 text-sm text-slate-300">
+              Complete your learning path and build a portfolio-ready project.
             </p>
           </div>
         </aside>

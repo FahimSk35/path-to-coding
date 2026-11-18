@@ -1,0 +1,1033 @@
+import Link from "next/link";
+import {
+  ArrowRight,
+  BookOpen,
+  CircleCheck,
+  ClipboardCheck,
+  Clock,
+  Compass,
+  Flame,
+  Gauge,
+  Server,
+  Sparkles,
+  Target,
+  TrendingUp,
+} from "lucide-react";
+import AppShell from "@/components/AppShell";
+import Badge, { priorityTone, statusTone } from "@/components/Badge";
+import ProgressBar from "@/components/ProgressBar";
+import { roadmap, skillGaps, skills, student, weeklyActivity } from "@/data/mockData";
+
+// Summary numbers shown at the top of the dashboard.
+const stats = [
+  { label: "Overall skill score", value: `${student.overallScore}%`, note: "+6% since last month", icon: Gauge },
+  { label: "Topics completed", value: student.completedTopics, note: "of 48 in your roadmap", icon: CircleCheck },
+  { label: "Study time this week", value: `${student.hoursThisWeek} h`, note: "Goal: 8 hours", icon: Clock },
+  { label: "Learning streak", value: `${student.streakDays} days`, note: "Keep it going!", icon: Flame },
+];
+
+const quickLinks = [
+  { label: "Retake assessment", href: "/assessment", icon: ClipboardCheck },
+  { label: "View skill profile", href: "/skills", icon: Gauge },
+  { label: "Change career goal", href: "/career", icon: Compass },
+  { label: "Browse resources", href: "/resources", icon: BookOpen },
+];
+
+export default function DashboardPage() {
+  // Tallest bar in the activity chart, so other bars can be sized relative to it.
+  const maxHours = Math.max(...weeklyActivity.map((d) => d.hours));
+  const completedStages = roadmap.filter((stage) => stage.status === "Completed").length;
+  const roadmapProgress = Math.round((completedStages / roadmap.length) * 100);
+  const nextStage = roadmap.find((stage) => stage.status === "Recommended Next");
+  const nextSkillScore = skills.find((skill) => skill.name === nextStage?.title)?.score;
+  const today = new Intl.DateTimeFormat("en", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(new Date());
+
+  return (
+    <AppShell>
+      {/* Welcome header */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-sm text-slate-500">{today}</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+            Welcome back, {student.name}
+          </h1>
+          <p className="mt-2 text-slate-500">
+            You are <span className="font-semibold text-ink">{roadmapProgress}% of the way</span> to becoming a{" "}
+            {student.careerGoal}. {completedStages} {completedStages === 1 ? "stage" : "stages"} done,{" "}
+            {roadmap.length - completedStages} to go.
+          </p>
+        </div>
+        <Link
+          href="/roadmap"
+          className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700"
+        >
+          Continue Learning <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+
+      {/* Stat cards */}
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <div key={stat.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-slate-500">{stat.label}</p>
+                <Icon className="h-[18px] w-[18px] text-slate-400" />
+              </div>
+              <p className="mt-3 text-2xl font-bold text-ink">{stat.value}</p>
+              <p className="mt-1 text-xs text-slate-500">{stat.note}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-6 grid gap-6 xl:grid-cols-3">
+        {/* LEFT COLUMN (2/3 width) */}
+        <div className="space-y-6 xl:col-span-2">
+          {/* Recommended next step */}
+          <div className="relative overflow-hidden rounded-2xl bg-ink p-6 text-white sm:p-8">
+            <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-brand-600/30" />
+            <div className="absolute -bottom-16 right-20 h-32 w-32 rounded-full bg-brand-500/20" />
+            <div className="relative">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-brand-100">
+                <Sparkles className="h-3.5 w-3.5" /> Recommended Next Step
+              </span>
+              <h2 className="mt-4 max-w-xl text-xl font-semibold leading-snug sm:text-2xl">
+                {nextStage
+                  ? `Strengthen your ${nextStage.title} fundamentals before moving to advanced backend concepts.`
+                  : "Keep building your backend development skills."}
+              </h2>
+              <p className="mt-3 max-w-xl text-sm text-slate-300">
+                {nextSkillScore !== undefined
+                  ? `Your current score is ${nextSkillScore}%. Backend frameworks rely on these fundamentals, so strengthening them unlocks the rest of your roadmap.`
+                  : "Strengthening your current focus will help unlock the rest of your roadmap."}
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link
+                  href="/roadmap"
+                  className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-brand-50"
+                >
+                  View Learning Roadmap <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="/resources"
+                  className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white ring-1 ring-white/25 transition hover:bg-white/10"
+                >
+                  See OOP resources
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Skill levels */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-semibold text-ink">Current skill levels</h2>
+                <p className="text-sm text-slate-500">From your assessment on {student.assessmentDate}</p>
+              </div>
+              <Link href="/skills" className="text-sm font-semibold text-brand-600 hover:text-brand-700">
+                Details
+              </Link>
+            </div>
+            <div className="mt-6 space-y-5">
+              {skills.map((skill) => (
+                <div key={skill.name}>
+                  <div className="mb-2 flex items-center justify-between text-sm">
+                    <span className="font-medium text-slate-700">{skill.name}</span>
+                    <span className="font-semibold text-ink">{skill.score}%</span>
+                  </div>
+                  <ProgressBar value={skill.score} />
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 flex flex-wrap gap-4 border-t border-slate-100 pt-4 text-xs text-slate-500">
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" />Strong (70%+)</span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-brand-600" />Developing (50–69%)</span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-500" />Needs work (40–49%)</span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-rose-500" />Weak (below 40%)</span>
+            </div>
+          </div>
+
+          {/* Roadmap preview */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-semibold text-ink">Learning roadmap preview</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  {completedStages} of {roadmap.length} stages complete · {roadmapProgress}% overall
+                </p>
+              </div>
+              <Link href="/roadmap" className="text-sm font-semibold text-brand-600 hover:text-brand-700">
+                Full roadmap
+              </Link>
+            </div>
+            <div className="mt-6 grid gap-3 sm:grid-cols-4">
+              {roadmap.slice(0, 4).map((stage) => (
+                <div
+                  key={stage.id}
+                  className={`rounded-xl border p-4 ${
+                    stage.status === "Recommended Next"
+                      ? "border-brand-600 bg-brand-50"
+                      : "border-slate-200"
+                  }`}
+                >
+                  <p className="text-xs font-semibold text-slate-400">Stage {stage.id}</p>
+                  <p className="mt-1 text-sm font-semibold leading-snug text-ink">{stage.title}</p>
+                  <div className="mt-3">
+                    <Badge tone={statusTone(stage.status)}>{stage.status}</Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN (1/3 width) */}
+        <div className="space-y-6">
+          {/* Career goal card */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                <Server className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-xs font-medium text-slate-500">Career goal</p>
+                <p className="font-semibold text-ink">{student.careerGoal}</p>
+              </div>
+            </div>
+            <div className="mt-5">
+              <div className="mb-2 flex justify-between text-sm">
+                <span className="text-slate-500">Readiness</span>
+                <span className="font-semibold text-ink">{student.overallScore}%</span>
+              </div>
+              <ProgressBar value={student.overallScore} color="bg-brand-600" />
+            </div>
+            <Link
+              href="/career"
+              className="mt-5 inline-flex text-sm font-semibold text-brand-600 hover:text-brand-700"
+            >
+              Change goal
+            </Link>
+          </div>
+
+          {/* Skill gaps */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex items-center gap-2">
+              <Target className="h-[18px] w-[18px] text-rose-500" />
+              <h2 className="font-semibold text-ink">Your Skill Gaps</h2>
+            </div>
+            <p className="mt-1 text-sm text-slate-500">Compared with Backend Developer targets</p>
+            <ul className="mt-5 space-y-4">
+              {skillGaps.map((gap) => (
+                <li key={gap.skill}>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-medium text-slate-700">{gap.skill}</span>
+                    <Badge tone={priorityTone(gap.priority)}>{gap.priority}</Badge>
+                  </div>
+                  {/* Bar showing current score, with a marker at the target */}
+                  <div className="relative mt-2 h-2 rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-slate-400"
+                      style={{ width: `${gap.score}%` }}
+                    />
+                    <div
+                      className="absolute -top-1 h-4 w-0.5 rounded bg-ink"
+                      style={{ left: `${gap.target}%` }}
+                    />
+                  </div>
+                  <p className="mt-1.5 text-xs text-slate-500">
+                    {gap.score}% now · target {gap.target}%
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Weekly activity chart */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-ink">This week</h2>
+              <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
+                <TrendingUp className="h-3.5 w-3.5" /> {student.hoursThisWeek} h studied
+              </span>
+            </div>
+            <div className="mt-6 flex h-32 items-end justify-between gap-2">
+              {weeklyActivity.map((d) => (
+                <div key={d.day} className="flex flex-1 flex-col items-center gap-2">
+                  <div className="flex h-24 w-full items-end">
+                    <div
+                      className={`w-full rounded-md ${d.hours === maxHours ? "bg-brand-600" : "bg-brand-200"}`}
+                      style={{ height: `${Math.max((d.hours / maxHours) * 100, 4)}%` }}
+                      title={`${d.hours} hours`}
+                    />
+                  </div>
+                  <span className="text-[11px] text-slate-500">{d.day}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Quick navigation */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="font-semibold text-ink">Quick links</h2>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {quickLinks.map((link) => {
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="flex flex-col gap-2 rounded-xl border border-slate-200 p-3 text-sm font-medium text-slate-700 transition hover:border-brand-200 hover:bg-brand-50"
+                  >
+                    <Icon className="h-[18px] w-[18px] text-brand-600" />
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </AppShell>
+  );
+}
+import Link from "next/link";
+import {
+  ArrowRight,
+  CircleCheck,
+  Clock,
+  Lock,
+  Server,
+  Sparkles,
+  Trophy,
+} from "lucide-react";
+import AppShell from "@/components/AppShell";
+import Badge, { difficultyTone, statusTone } from "@/components/Badge";
+import DemoButton from "@/components/DemoButton";
+import { roadmap, skills, student, type RoadmapStage } from "@/data/mockData";
+
+// The round marker on the timeline. Its look depends on the stage status.
+function StageMarker({ stage }: { stage: RoadmapStage }) {
+  if (stage.status === "Completed") {
+    return (
+      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-white ring-4 ring-slate-50">
+        <CircleCheck className="h-5 w-5" />
+      </span>
+    );
+  }
+  if (stage.status === "Recommended Next") {
+    return (
+      <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white ring-4 ring-brand-100">
+        <span className="absolute inset-0 animate-ping rounded-full bg-brand-400 opacity-30" />
+        {stage.id}
+      </span>
+    );
+  }
+  if (stage.status === "Final Goal") {
+    return (
+      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-ink text-white ring-4 ring-slate-50">
+        <Trophy className="h-5 w-5" />
+      </span>
+    );
+  }
+  return (
+    <span className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-slate-200 bg-white text-sm font-bold text-slate-400 ring-4 ring-slate-50">
+      {stage.id}
+    </span>
+  );
+}
+
+export default function RoadmapPage() {
+  const completed = roadmap.filter((s) => s.status === "Completed").length;
+  const percent = Math.round((completed / roadmap.length) * 100);
+  const focusStages = roadmap.filter((stage) => stage.status === "Recommended Next").length;
+  const totalWeeks = roadmap.reduce(
+    (total, stage) => total + Number(stage.duration.match(/\d+/)?.[0] ?? 0),
+    0,
+  );
+  const remainingWeeks = roadmap
+    .filter((stage) => stage.status !== "Completed")
+    .reduce((total, stage) => total + Number(stage.duration.match(/\d+/)?.[0] ?? 0), 0);
+  const estimatedFinishDate = new Date();
+  estimatedFinishDate.setDate(estimatedFinishDate.getDate() + remainingWeeks * 7);
+  const estimatedFinish = new Intl.DateTimeFormat("en", {
+    month: "long",
+    year: "numeric",
+  }).format(estimatedFinishDate);
+  const fundamentalsScore = skills.find((skill) => skill.name === roadmap[0]?.title)?.score;
+  const nextSkillScore = skills.find((skill) => skill.name === roadmap[1]?.title)?.score;
+
+  return (
+    <AppShell>
+      {/* Header */}
+      <div className="flex flex-wrap items-start justify-between gap-6">
+        <div>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700 ring-1 ring-inset ring-brand-200">
+            <Server className="h-3.5 w-3.5" /> Career goal: {student.careerGoal}
+          </span>
+          <h1 className="mt-3 text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+            Your Personalized Learning Path
+          </h1>
+          <p className="mt-2 max-w-2xl text-slate-500">
+            Your next steps, organized around your current skills and career goal.
+          </p>
+        </div>
+        <Link
+          href="/career"
+          className="rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50"
+        >
+          Change career goal
+        </Link>
+      </div>
+
+      <div className="mt-8 grid gap-8 lg:grid-cols-3">
+        {/* TIMELINE */}
+        <div className="lg:col-span-2">
+          <ol className="relative">
+            {roadmap.map((stage, index) => {
+              const isNext = stage.status === "Recommended Next";
+              const isLastStage = index === roadmap.length - 1;
+              const isDone = stage.status === "Completed";
+
+              return (
+                <li key={stage.id} className="relative flex gap-5 pb-6">
+                  {/* Vertical connecting line (not drawn after the last stage) */}
+                  {!isLastStage && (
+                    <span
+                      className={`absolute left-5 top-10 -ml-px h-[calc(100%-2.5rem)] w-0.5 ${
+                        isDone ? "bg-emerald-400" : "bg-slate-200"
+                      }`}
+                    />
+                  )}
+
+                  <div className="relative z-10 shrink-0">
+                    <StageMarker stage={stage} />
+                  </div>
+
+                  {/* Stage card */}
+                  <div
+                    className={`flex-1 rounded-2xl border bg-white p-5 transition sm:p-6 ${
+                      isNext
+                        ? "border-brand-600 shadow-lg shadow-brand-600/10 ring-1 ring-brand-600"
+                        : "border-slate-200 shadow-sm hover:shadow-md"
+                    } ${stage.status === "Upcoming" ? "opacity-90" : ""}`}
+                  >
+                    {isNext && (
+                      <p className="mb-3 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-600">
+                        <Sparkles className="h-3.5 w-3.5" /> Start here
+                      </p>
+                    )}
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold text-slate-400">Stage {stage.id}</p>
+                        <h2 className="mt-0.5 text-lg font-semibold text-ink">{stage.title}</h2>
+                      </div>
+                      <Badge tone={statusTone(stage.status)}>{stage.status}</Badge>
+                    </div>
+
+                    <p className="mt-2 text-sm leading-relaxed text-slate-500">{stage.description}</p>
+
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      <Badge tone={difficultyTone(stage.difficulty)}>{stage.difficulty}</Badge>
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500">
+                        <Clock className="h-3.5 w-3.5" /> {stage.duration}
+                      </span>
+                      <span className="text-slate-300">·</span>
+                      {stage.topics.map((topic) => (
+                        <span key={topic} className="rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                          {topic}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Actions only for the recommended stage */}
+                    {isNext && (
+                      <div className="mt-5 flex flex-wrap gap-3 border-t border-slate-100 pt-5">
+                        <DemoButton variant="primary" message="Demo only — lessons will be added in a later phase.">
+                          Start Learning <ArrowRight className="h-4 w-4" />
+                        </DemoButton>
+                        <Link
+                          href="/resources"
+                          className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
+                        >
+                          View resources
+                        </Link>
+                      </div>
+                    )}
+                    {stage.status === "Upcoming" && (
+                      <p className="mt-4 flex items-center gap-1.5 text-xs text-slate-400">
+                        <Lock className="h-3.5 w-3.5" /> Unlocks after the previous stage
+                      </p>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+
+        {/* SIDE PANEL */}
+        <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="font-semibold text-ink">Progress summary</h3>
+
+            {/* Circular progress ring drawn with SVG */}
+            <div className="mt-6 flex items-center gap-5">
+              <div className="relative h-24 w-24">
+                <svg viewBox="0 0 36 36" className="h-24 w-24 -rotate-90">
+                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e2e8f0" strokeWidth="3" />
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="15.9"
+                    fill="none"
+                    stroke="#4f46e5"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeDasharray={`${percent} 100`}
+                  />
+                </svg>
+                <span className="absolute inset-0 flex items-center justify-center text-xl font-bold text-ink">
+                  {percent}%
+                </span>
+              </div>
+              <div className="space-y-1 text-sm">
+                <p className="text-slate-500">
+                  <span className="font-semibold text-ink">{completed}</span> of {roadmap.length} stages complete
+                </p>
+                <p className="text-slate-500">
+                  <span className="font-semibold text-ink">~{totalWeeks} weeks</span> total
+                </p>
+                <p className="text-slate-500">
+                  <span className="font-semibold text-ink">~{remainingWeeks} weeks</span> remaining
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-3 border-t border-slate-100 pt-5 text-sm">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Completed</span>
+                <span className="font-semibold text-emerald-600">{completed}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">In focus</span>
+                <span className="font-semibold text-brand-600">{focusStages}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Upcoming</span>
+                <span className="font-semibold text-slate-700">
+                  {roadmap.filter((s) => s.status === "Upcoming").length}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Estimated finish</span>
+                <span className="font-semibold text-slate-700">{estimatedFinish}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="font-semibold text-ink">Why this order?</h3>
+            <p className="mt-2 text-sm leading-relaxed text-slate-500">
+              {fundamentalsScore !== undefined && nextSkillScore !== undefined
+                ? `Your ${roadmap[0].title} fundamentals are strong (${fundamentalsScore}%), so they are marked complete. ${roadmap[1].title} (${nextSkillScore}%) is a key building block for backend work, so it comes next. Later stages build on those foundations.`
+                : "Each stage builds on the skills you need for your career goal, starting with your most important learning gaps."}
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-ink p-6 text-white">
+            <Trophy className="h-6 w-6 text-brand-200" />
+            <h3 className="mt-3 font-semibold">Final goal</h3>
+            <p className="mt-1.5 text-sm text-slate-300">
+              A portfolio-ready backend project that shows employers what you can build.
+            </p>
+          </div>
+        </aside>
+      </div>
+    </AppShell>
+  );
+}
+// =====================================================================
+// MOCK DATA
+// All the sample information shown in the prototype lives in this file.
+// Change a value here and every page that uses it updates automatically.
+// Later, this file can be replaced by real data from a backend.
+// =====================================================================
+
+// ---------- TypeScript types ----------
+// A "type" describes the shape of an object, so the editor can warn us
+// if we forget a field or misspell one.
+
+export type Priority = "High" | "Medium" | "Low";
+export type StageStatus = "Completed" | "Recommended Next" | "Upcoming" | "Final Goal";
+export type Difficulty = "Beginner" | "Intermediate" | "Advanced";
+
+export type Skill = {
+  name: string;
+  short: string; // short label used in small charts
+  score: number; // 0 to 100
+  description: string;
+};
+
+export type SkillGap = {
+  skill: string;
+  score: number;
+  target: number;
+  priority: Priority;
+  reason: string;
+};
+
+export type CareerId = "frontend" | "backend" | "fullstack" | "data" | "ml";
+
+export type Career = {
+  id: CareerId;
+  title: string;
+  description: string;
+  skills: string[];
+  demand: string;
+};
+
+export type RoadmapStage = {
+  id: number;
+  title: string;
+  status: StageStatus;
+  difficulty: Difficulty;
+  duration: string;
+  description: string;
+  topics: string[];
+};
+
+export type Question = {
+  id: number;
+  category: string;
+  question: string;
+  code?: string; // optional code snippet shown with the question
+  options: string[];
+  answer: number; // index of the correct option (0, 1, 2 or 3)
+};
+
+export type ResourceType = "Course" | "Video" | "Article" | "Practice";
+
+export type Resource = {
+  id: number;
+  title: string;
+  topic: string;
+  type: ResourceType;
+  difficulty: Difficulty;
+  duration: string;
+  description: string;
+  recommended?: boolean;
+};
+
+// ---------- The fictional student ----------
+
+export const student = {
+  name: "Fahim",
+  fullName: "Sheikh Fahim",
+  initials: "SF",
+  program: "BSc in Computer Science, Year 2",
+  careerGoal: "Backend Developer",
+  overallScore: 54,
+  level: "Intermediate Beginner",
+  streakDays: 6,
+  hoursThisWeek: 7.5,
+  completedTopics: 12,
+  assessmentDate: "18 Oct 2026",
+};
+
+// ---------- Skill scores (from the project brief) ----------
+
+export const skills: Skill[] = [
+  {
+    name: "Programming Fundamentals",
+    short: "Fundamentals",
+    score: 78,
+    description: "Variables, conditions, loops and functions.",
+  },
+  {
+    name: "Object-Oriented Programming",
+    short: "OOP",
+    score: 52,
+    description: "Classes, objects, inheritance and encapsulation.",
+  },
+  {
+    name: "Data Structures",
+    short: "Data Structures",
+    score: 43,
+    description: "Arrays, lists, stacks, queues, trees and hash maps.",
+  },
+  {
+    name: "Database & SQL",
+    short: "SQL",
+    score: 35,
+    description: "Tables, queries, joins and database design.",
+  },
+  {
+    name: "Web Development",
+    short: "Web Dev",
+    score: 61,
+    description: "HTML, CSS, JavaScript and how the web works.",
+  },
+];
+
+// ---------- Skill gaps compared with the Backend Developer target ----------
+
+export const skillGaps: SkillGap[] = [
+  {
+    skill: "Database & SQL",
+    score: 35,
+    target: 75,
+    priority: "High",
+    reason: "Backend developers query and design databases every day.",
+  },
+  {
+    skill: "Data Structures",
+    score: 43,
+    target: 70,
+    priority: "High",
+    reason: "Needed to write efficient server-side code.",
+  },
+  {
+    skill: "Object-Oriented Programming",
+    score: 52,
+    target: 75,
+    priority: "Medium",
+    reason: "Most backend frameworks are built around classes and objects.",
+  },
+  {
+    skill: "Web Development",
+    score: 61,
+    target: 70,
+    priority: "Low",
+    reason: "Your foundation is good; a little more HTTP knowledge will help.",
+  },
+];
+
+// ---------- Career goals ----------
+
+export const careers: Career[] = [
+  {
+    id: "frontend",
+    title: "Frontend Developer",
+    description: "Build the visual, interactive parts of websites and apps that people use.",
+    skills: ["HTML & CSS", "JavaScript", "React"],
+    demand: "High demand",
+  },
+  {
+    id: "backend",
+    title: "Backend Developer",
+    description: "Design servers, APIs and databases that power applications behind the scenes.",
+    skills: ["OOP", "SQL", "REST APIs"],
+    demand: "High demand",
+  },
+  {
+    id: "fullstack",
+    title: "Full-Stack Developer",
+    description: "Work across both frontend and backend to deliver complete features.",
+    skills: ["JavaScript", "React", "Node.js"],
+    demand: "Very high demand",
+  },
+  {
+    id: "data",
+    title: "Data Analyst",
+    description: "Turn raw data into insights using queries, statistics and visualisation.",
+    skills: ["SQL", "Python", "Statistics"],
+    demand: "Growing demand",
+  },
+  {
+    id: "ml",
+    title: "Machine Learning Engineer",
+    description: "Build and deploy models that learn from data to make predictions.",
+    skills: ["Python", "Math", "ML Libraries"],
+    demand: "Growing demand",
+  },
+];
+
+// ---------- Personalized learning roadmap ----------
+
+export const roadmap: RoadmapStage[] = [
+  {
+    id: 1,
+    title: "Programming Fundamentals",
+    status: "Completed",
+    difficulty: "Beginner",
+    duration: "3 weeks",
+    description: "Core building blocks of every program: variables, conditions, loops and functions.",
+    topics: ["Variables", "Loops", "Functions"],
+  },
+  {
+    id: 2,
+    title: "Object-Oriented Programming",
+    status: "Recommended Next",
+    difficulty: "Intermediate",
+    duration: "3 weeks",
+    description: "Learn to organise code with classes and objects — the foundation of backend frameworks.",
+    topics: ["Classes", "Inheritance", "Encapsulation", "Polymorphism"],
+  },
+  {
+    id: 3,
+    title: "Data Structures",
+    status: "Upcoming",
+    difficulty: "Intermediate",
+    duration: "4 weeks",
+    description: "Store and organise data efficiently with arrays, lists, stacks, queues and hash maps.",
+    topics: ["Lists", "Stacks & Queues", "Hash Maps"],
+  },
+  {
+    id: 4,
+    title: "SQL & Databases",
+    status: "Upcoming",
+    difficulty: "Intermediate",
+    duration: "3 weeks",
+    description: "Design tables, write queries and connect related data using joins.",
+    topics: ["SELECT queries", "Joins", "Database design"],
+  },
+  {
+    id: 5,
+    title: "REST APIs",
+    status: "Upcoming",
+    difficulty: "Intermediate",
+    duration: "2 weeks",
+    description: "Understand how applications talk to each other using HTTP requests and JSON.",
+    topics: ["HTTP methods", "JSON", "Status codes"],
+  },
+  {
+    id: 6,
+    title: "Backend Development",
+    status: "Upcoming",
+    difficulty: "Advanced",
+    duration: "5 weeks",
+    description: "Build server-side applications with routing, validation and database access.",
+    topics: ["Node.js / Express", "Authentication basics", "Testing"],
+  },
+  {
+    id: 7,
+    title: "Build a Backend Project",
+    status: "Final Goal",
+    difficulty: "Advanced",
+    duration: "4 weeks",
+    description: "Bring everything together in a portfolio-ready API for a real-world idea.",
+    topics: ["Project planning", "API + database", "Deployment"],
+  },
+];
+
+// ---------- Assessment questions ----------
+
+export const questions: Question[] = [
+  {
+    id: 1,
+    category: "Programming Fundamentals",
+    question: "What is the main purpose of a function in programming?",
+    options: [
+      "To store images",
+      "To reuse a block of code",
+      "To create a database",
+      "To connect to the internet",
+    ],
+    answer: 1,
+  },
+  {
+    id: 2,
+    category: "Loops",
+    question: "How many times will this loop print \"Hello\"?",
+    code: 'for (let i = 0; i < 3; i++) {\n  console.log("Hello");\n}',
+    options: ["2 times", "3 times", "4 times", "It never stops"],
+    answer: 1,
+  },
+  {
+    id: 3,
+    category: "Programming Fundamentals",
+    question: "Which data type is best for storing the value true or false?",
+    options: ["String", "Integer", "Boolean", "Array"],
+    answer: 2,
+  },
+  {
+    id: 4,
+    category: "Object-Oriented Programming",
+    question: "In object-oriented programming, what is a class?",
+    options: [
+      "A blueprint for creating objects",
+      "A type of loop",
+      "A database table",
+      "An error message",
+    ],
+    answer: 0,
+  },
+  {
+    id: 5,
+    category: "Object-Oriented Programming",
+    question: "Which OOP principle hides an object's internal details and exposes only what is needed?",
+    options: ["Inheritance", "Encapsulation", "Recursion", "Compilation"],
+    answer: 1,
+  },
+  {
+    id: 6,
+    category: "Data Structures",
+    question: "Which data structure follows the \"Last In, First Out\" (LIFO) rule?",
+    options: ["Queue", "Stack", "Array", "Graph"],
+    answer: 1,
+  },
+  {
+    id: 7,
+    category: "Databases & SQL",
+    question: "Which SQL command is used to read data from a table?",
+    code: "___ name, email FROM students;",
+    options: ["GET", "READ", "SELECT", "FETCH"],
+    answer: 2,
+  },
+  {
+    id: 8,
+    category: "APIs",
+    question: "Which HTTP method is normally used to create a new resource through a REST API?",
+    options: ["GET", "POST", "DELETE", "HEAD"],
+    answer: 1,
+  },
+  {
+    id: 9,
+    category: "Web Development",
+    question: "Which language is mainly used to style the appearance of a web page?",
+    options: ["HTML", "CSS", "SQL", "Python"],
+    answer: 1,
+  },
+  {
+    id: 10,
+    category: "Data Structures",
+    question: "What is the index of the first element in a JavaScript or Python array?",
+    options: ["0", "1", "-1", "It depends on the array"],
+    answer: 0,
+  },
+];
+
+// ---------- Learning resources (fictional examples) ----------
+
+export const resources: Resource[] = [
+  {
+    id: 1,
+    title: "OOP from Zero: Classes & Objects",
+    topic: "Object-Oriented Programming",
+    type: "Course",
+    difficulty: "Intermediate",
+    duration: "6 hours",
+    description: "Build a small library-management system while learning classes, objects and methods.",
+    recommended: true,
+  },
+  {
+    id: 2,
+    title: "Inheritance and Polymorphism Explained",
+    topic: "Object-Oriented Programming",
+    type: "Video",
+    difficulty: "Intermediate",
+    duration: "45 min",
+    description: "A visual walkthrough of how classes share and override behaviour.",
+    recommended: true,
+  },
+  {
+    id: 3,
+    title: "Stacks and Queues in Practice",
+    topic: "Data Structures",
+    type: "Practice",
+    difficulty: "Intermediate",
+    duration: "2 hours",
+    description: "Ten short coding exercises that use stacks and queues to solve real problems.",
+  },
+  {
+    id: 4,
+    title: "SQL Basics: Your First Queries",
+    topic: "Databases & SQL",
+    type: "Course",
+    difficulty: "Beginner",
+    duration: "4 hours",
+    description: "Learn SELECT, WHERE, ORDER BY and JOIN using a sample university database.",
+    recommended: true,
+  },
+  {
+    id: 5,
+    title: "Designing Good Database Tables",
+    topic: "Databases & SQL",
+    type: "Article",
+    difficulty: "Intermediate",
+    duration: "20 min",
+    description: "Primary keys, foreign keys and normalisation explained with simple examples.",
+  },
+  {
+    id: 6,
+    title: "How REST APIs Work",
+    topic: "APIs",
+    type: "Video",
+    difficulty: "Beginner",
+    duration: "30 min",
+    description: "Requests, responses, JSON and status codes, explained with everyday analogies.",
+  },
+  {
+    id: 7,
+    title: "Loops and Functions Workout",
+    topic: "Programming Fundamentals",
+    type: "Practice",
+    difficulty: "Beginner",
+    duration: "1.5 hours",
+    description: "Strengthen the basics with 15 bite-sized problems and instant feedback.",
+  },
+  {
+    id: 8,
+    title: "Build Your First Express API",
+    topic: "Backend Development",
+    type: "Course",
+    difficulty: "Advanced",
+    duration: "8 hours",
+    description: "Create routes, connect a database and test endpoints for a to-do application.",
+  },
+  {
+    id: 9,
+    title: "Responsive Layouts with Modern CSS",
+    topic: "Web Development",
+    type: "Article",
+    difficulty: "Beginner",
+    duration: "25 min",
+    description: "Flexbox and Grid basics for pages that look good on every screen size.",
+  },
+];
+
+// ---------- Weekly study activity (used by the dashboard chart) ----------
+
+export const weeklyActivity = [
+  { day: "Mon", hours: 1.5 },
+  { day: "Tue", hours: 0.5 },
+  { day: "Wed", hours: 2 },
+  { day: "Thu", hours: 1 },
+  { day: "Fri", hours: 0 },
+  { day: "Sat", hours: 1.5 },
+  { day: "Sun", hours: 1 },
+];
+{
+  "name": "path-to-coding",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "dependencies": {
+    "lucide-react": "^0.544.0",
+    "next": "16.4.2",
+    "react": "^19.2.9",
+    "react-dom": "^19.2.9"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.13",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5"
+  }
+}
